@@ -1,9 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Page</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARADHA Box Tracking</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        header { background: #4CAF50; color: white; padding: 10px 0; text-align: center; }
+        .container { max-width: 600px; margin: auto; }
+        .button { background: #4CAF50; color: white; border: none; padding: 10px; cursor: pointer; }
+        .input { margin-bottom: 10px; width: 100%; padding: 10px; }
+    </style>
 </head>
 <body>
-    <h1>Welcome to my page!</h1>
+<header>
+    <h1>ARADHA Box Tracking Application</h1>
+</header>
+<div class="container">
+    <h2>Upload Box</h2>
+    <input type="file" id="fileUpload" class="input" />
+    <button class="button" onclick="uploadFile()">Upload</button>
+    <h2>Scan Box</h2>
+    <input type="text" id="scanInput" class="input" placeholder="Scan barcode" />
+    <button class="button" onclick="scanBox()">Scan</button>
+    <h2>Print Label</h2>
+    <button class="button" onclick="printLabel()">Print</button>
+</div>
+<script>
+function uploadFile() {
+    const fileInput = document.getElementById('fileUpload');
+    if (fileInput.files.length === 0) {
+        alert('Please select a file to upload.');
+        return;
+    }
+    // Implement file upload functionality here
+    alert('File uploaded: ' + fileInput.files[0].name);
+}
+
+function scanBox() {
+    const scanInput = document.getElementById('scanInput').value;
+    if (!scanInput) {
+        alert('Please enter a barcode to scan.');
+        return;
+    }
+    // Implement box scanning functionality here
+    alert('Scanned box with barcode: ' + scanInput);
+}
+
+function printLabel() {
+    // Implement print functionality here
+    alert('Printing label...');
+}
+</script>
 </body>
 </html>
