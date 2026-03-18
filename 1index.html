@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ARADHA - Box Tracking</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            background: rgba(255,255,255,0.2);
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.1);
+            padding: 0.3rem;
+            border-radius: 25px;
+        }
+
+        .nav-tab {
+            padding: 0.5rem 1.2rem;
+            cursor: pointer;
+            border-radius: 20px;
+            font-weight: 500;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .nav-tab.active {
+            background: white;
+            color: #764ba2;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 1rem;
+        }
+
+        /* Upload Tab */
+        .upload-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .template-btn {
+            background: white;
+            color: #764ba2;
+            border: 2px solid #764ba2;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .template-btn:hover {
+            background: #764ba2;
+            color: white;
+        }
+
+        .upload-area {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            border: 2px dashed #cbd5e0;
+            margin: 1rem 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .preview-table {
+            background: white;
+            border-radius: 15px;
+            padding: 1rem;
+            margin-top: 1rem;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 0.8rem;
+            font-size: 0.8rem;
+            color: #4a5568;
+        }
+
+        td {
+            padding: 0.8rem;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.8rem;
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 100%;
+            margin: 1rem 0;
+            cursor: pointer;
+        }
+
+        /* Scan Tab */
+        .scan-container {
+            display: none;
+        }
+
+        .scan-container.active {
+            display: block;
+        }
+
+        .global-dashboard {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 1.2rem;
+            margin: 1rem 0;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .stat-item {
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+        }
+
+        .progress-bar {
+            margin-top: 1rem;
+            height: 8px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #ffd700;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .pending-boxes, .recent-scans {
+            background: white;
+            border-radius: 15px;
+            padding: 1rem;
+            margin: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .pending-title, .recent-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .pending-list, .scan-list {
+            list-style: none;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .pending-item, .scan-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+        }
+
+        .pending-item .barcode, .scan-item .barcode {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .scan-item .time {
+            color: #718096;
+            font-size: 0.8rem;
+        }
+
+        .scan-item.duplicate {
+            background: #fff5f5;
+            color: #c53030;
+        }
+
+        .pending-item {
+            background: #fef9e7;
+            color: #7d5d23;
+        }
+
+        .barcode-input-area {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem 1rem;
+            margin: 1rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .barcode-input {
+            width: 100%;
+            padding: 1.2rem;
+            font-size: 1.2rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: center;
+            letter-spacing: 2px;
+            background: #f8fafc;
+        }
+
+        .barcode-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .scan-hint {
+            margin-top: 1rem;
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .scan-hint i {
+            font-style: normal;
+            background: #e2e8f0;
+            padding: 0.2rem 0.5rem;
+            border-radius: 5px;
+        }
+
+        .status-message {
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #c6f6d5;
+            color: #22543d;
+            display: block;
+        }
+
+        .status-message.error {
+            background: #fed7d7;
+            color: #742a2a;
+            display: block;
+        }
+
+        .status-message.info {
+            background: #bee3f8;
+            color: #2c5282;
+            display: block;
+        }
+
+        .status-message.warning {
+            background: #feebc8;
+            color: #7b341e;
+            display: block;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .modal-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-text {
+            color: #718096;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-btn.print {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal-btn.cancel {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .modal-btn.print:hover {
+            transform: scale(1.02);
+        }
+
+        .modal-btn.cancel:hover {
+            background: #cbd5e0;
+        }
+
+        /* Print Sticker - 75mm x 50mm with borders */
+        .print-sticker {
+            width: 75mm;
+            height: 50mm;
+            padding: 3mm;
+            background: white;
+            font-family: 'Arial', sans-serif;
+            position: relative;
+            margin: 0 auto;
+            display: none;
+            box-sizing: border-box;
+        }
+
+        @media print {
+            @page {
+                size: 75mm 50mm;
+                margin: 0;
+            }
+            
+            body * {
+                visibility: hidden;
+            }
+            
+            .print-sticker, .print-sticker * {
+                visibility: visible;
+            }
+            
+            .print-sticker {
+                display: block !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 75mm;
+                height: 50mm;
+                margin: 0;
+                padding: 2mm;
+                border: none;
+                box-shadow: none;
+                background: white;
+            }
+        }
+
+        .sticker-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2mm;
+        }
+
+        .sticker-row {
+            display: flex;
+            gap: 2mm;
+            flex: 1;
+        }
+
+        .sticker-field {
+            flex: 1;
+            border: 1px solid #333;
+            padding: 1mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: white;
+            overflow: hidden;
+        }
+
+        .field-label {
+            font-size: 6pt;
+            font-weight: bold;
+            color: #555;
+            text-transform: uppercase;
+            margin-bottom: 1px;
+        }
+
+        .field-value {
+            font-size: 10pt;
+            font-weight: 600;
+            color: #000;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .company-field {
+            flex: 2;
+        }
+
+        .company-field .field-value {
+            font-size: 14pt;
+            font-weight: 900;
+            color: #2d3748;
+        }
+
+        .barcode-field {
+            flex: 1;
+            border: 1px solid #333;
+            padding: 1mm;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .barcode-field canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .waybill-barcode {
+            margin-top: 1mm;
+            font-size: 8pt;
+            text-align: center;
+            word-break: break-all;
+        }
+
+        @media (max-width: 480px) {
+            .nav-tab {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            
+            .logo {
+                font-size: 1.2rem;
+            }
+            
+            .upload-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .template-btn {
+                text-align: center;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">ARADHA</div>
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="switchTab('upload')">Upload</div>
+            <div class="nav-tab" onclick="switchTab('scan')">Scan & Print</div>
+        </div>
+    </div>
+
+    <!-- Upload Tab -->
+    <div id="uploadTab" class="container">
+        <div class="upload-header">
+            <h2 style="color: #2d3748;">Upload Excel File</h2>
+            <button class="template-btn" onclick="downloadTemplate()">
+                <span>📥</span> Download Dummy Template
+            </button>
+        </div>
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">📁</div>
+            <h3>Click to Upload or Drag & Drop</h3>
+            <p style="color: #718096; margin-top: 0.5rem;">Supports .xlsx, .xls files</p>
+            <p style="color: #a0aec0; font-size: 0.8rem; margin-top: 1rem;">Required columns: Box Barcode ID, Waybill No, Sender City, Receiver City, Receiver Name, Total Boxes (as number), Company Name</p>
+            <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls" onchange="handleFileUpload(this)">
+        </div>
+
+        <div id="previewSection" style="display: none;">
+            <div class="preview-table">
+                <table id="previewTable">
+                    <thead>
+                        <tr>
+                            <th>Box Barcode</th>
+                            <th>Waybill No</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Receiver</th>
+                            <th>Total Boxes</th>
+                            <th>Company</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <button class="save-btn" onclick="saveRecords()">Save All Records to App</button>
+        </div>
+    </div>
+
+    <!-- Scan & Print Tab -->
+    <div id="scanTab" class="container scan-container">
+        <!-- Global Dashboard -->
+        <div class="global-dashboard" id="globalDashboard" style="display: none;">
+            <div class="dashboard-header">
+                <span>Overall Progress</span>
+                <span class="waybill-display">All Shipments</span>
+            </div>
+            <div class="stats-container">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalBoxesGlobal">0</div>
+                    <div class="stat-label">Total Boxes</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="scannedBoxesGlobal">0</div>
+                    <div class="stat-label">Scanned</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="pendingBoxesGlobal">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFillGlobal" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <!-- All Pending Boxes (global) -->
+        <div class="pending-boxes" id="pendingBoxesSection" style="display: none;">
+            <div class="pending-title">
+                <span>📦 All Pending Boxes</span>
+                <span style="color: #718096; font-size: 0.8rem;" id="pendingCountGlobal">0 pending</span>
+            </div>
+            <ul class="pending-list" id="pendingListGlobal"></ul>
+        </div>
+
+        <!-- Recent Scans (global) -->
+        <div class="recent-scans" id="recentScans" style="display: none;">
+            <div class="recent-title">
+                <span>📋 Recent Scans</span>
+                <span style="color: #718096; font-size: 0.8rem;" id="scanCount">0 scans</span>
+            </div>
+            <ul class="scan-list" id="scanList"></ul>
+        </div>
+
+        <div class="barcode-input-area">
+            <input type="text" id="barcodeInput" class="barcode-input" placeholder="Scan barcode here..." autofocus>
+            <div class="scan-hint">
+                <i>Scanner ready</i> - Scan barcode to auto-print sticker
+            </div>
+        </div>
+
+        <div id="scanStatus" class="status-message"></div>
+    </div>
+
+    <!-- Hidden Sticker Template - 75x50mm with borders -->
+    <div id="stickerTemplate" class="print-sticker">
+        <div class="sticker-content">
+            <!-- Row 1: Company and Box Count -->
+            <div class="sticker-row">
+                <div class="sticker-field company-field">
+                    <div class="field-label">ARADHA</div>
+                    <div class="field-value" id="printCompany">ARADHA</div>
+                </div>
+                <div class="sticker-field">
+                    <div class="field-label">BOX</div>
+                    <div class="field-value" id="printBoxCount">0/0</div>
+                </div>
+            </div>
+            <!-- Row 2: Waybill -->
+            <div class="sticker-row">
+                <div class="sticker-field">
+                    <div class="field-label">WAYBILL</div>
+                    <div class="field-value" id="printWaybill">WB123456</div>
+                </div>
+            </div>
+            <!-- Row 3: Route -->
+            <div class="sticker-row">
+                <div class="sticker-field">
+                    <div class="field-label">ROUTE</div>
+                    <div class="field-value" id="printRoute">Mumbai → Delhi</div>
+                </div>
+            </div>
+            <!-- Row 4: Receiver -->
+            <div class="sticker-row">
+                <div class="sticker-field">
+                    <div class="field-label">RECEIVER</div>
+                    <div class="field-value" id="printReceiver">John Doe</div>
+                </div>
+            </div>
+            <!-- Row 5: Barcode -->
+            <div class="sticker-row">
+                <div class="barcode-field">
+                    <canvas id="barcodeCanvas"></canvas>
+                    <div class="waybill-barcode" id="printBarcodeText">WB123456</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Duplicate Scan Modal -->
+    <div class="modal-overlay" id="duplicateModal">
+        <div class="modal-content">
+            <div class="modal-icon">⚠️</div>
+            <div class="modal-title">Box Already Scanned!</div>
+            <div class="modal-text" id="modalBoxInfo">BOX123 - Waybill: WB789</div>
+            <div class="modal-buttons">
+                <button class="modal-btn print" id="modalPrintBtn">Print Again</button>
+                <button class="modal-btn cancel" id="modalCancelBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        // Store records in memory
+        let records = [];
+        // Track scanned boxes per waybill: { waybill: [barcode1, barcode2, ...] } (for duplicate check)
+        let scannedBoxes = {};
+        // Map to store assigned box numbers per waybill per barcode: { waybill: { barcode: number } }
+        let boxNumberMap = {};
+        // For recent scans list
+        let recentScans = [];
+
+        // Audio context for beep
+        let audioContext = null;
+
+        // Initialize audio context on user interaction (required by browsers)
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }
+
+        // Play beep sound
+        function playBeep() {
+            try {
+                initAudio();
+                if (audioContext && audioContext.state === 'running') {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = 800;
+                    gainNode.gain.value = 0.3;
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                }
+            } catch (e) {
+                console.log('Audio not supported:', e);
+            }
+        }
+
+        // Tab switching
+        function switchTab(tab) {
+            const uploadTab = document.getElementById('uploadTab');
+            const scanTab = document.getElementById('scanTab');
+            const tabs = document.querySelectorAll('.nav-tab');
+            
+            if (tab === 'upload') {
+                uploadTab.style.display = 'block';
+                scanTab.classList.remove('active');
+                tabs[0].classList.add('active');
+                tabs[1].classList.remove('active');
+            } else {
+                uploadTab.style.display = 'none';
+                scanTab.classList.add('active');
+                tabs[0].classList.remove('active');
+                tabs[1].classList.add('active');
+                document.getElementById('barcodeInput').focus();
+                updateDashboard();
+            }
+        }
+
+        // Download dummy template
+        function downloadTemplate() {
+            const dummyData = [
+                ['Box Barcode ID', 'Waybill No', 'Sender City', 'Receiver City', 'Receiver Name', 'Total Boxes', 'Company Name'],
+                ['BOX001', 'WB123456', 'Mumbai', 'Delhi', 'Rajesh Kumar', '5', 'ARADHA'],
+                ['BOX002', 'WB123456', 'Mumbai', 'Delhi', 'Rajesh Kumar', '5', 'ARADHA'],
+                ['BOX003', 'WB123456', 'Mumbai', 'Delhi', 'Rajesh Kumar', '5', 'ARADHA'],
+                ['BOX004', 'WB123456', 'Mumbai', 'Delhi', 'Rajesh Kumar', '5', 'ARADHA'],
+                ['BOX005', 'WB123456', 'Mumbai', 'Delhi', 'Rajesh Kumar', '5', 'ARADHA'],
+                ['BOX006', 'WB789012', 'Bangalore', 'Chennai', 'Priya Singh', '3', 'ARADHA'],
+                ['BOX007', 'WB789012', 'Bangalore', 'Chennai', 'Priya Singh', '3', 'ARADHA'],
+                ['BOX008', 'WB789012', 'Bangalore', 'Chennai', 'Priya Singh', '3', 'ARADHA'],
+                ['BOX009', 'WB345678', 'Pune', 'Hyderabad', 'Amit Patel', '2', 'ARADHA'],
+                ['BOX010', 'WB345678', 'Pune', 'Hyderabad', 'Amit Patel', '2', 'ARADHA'],
+                ['BOX011', 'WB901234', 'Ahmedabad', 'Jaipur', 'Sunita Sharma', '4', 'ARADHA'],
+                ['BOX012', 'WB901234', 'Ahmedabad', 'Jaipur', 'Sunita Sharma', '4', 'ARADHA'],
+                ['BOX013', 'WB901234', 'Ahmedabad', 'Jaipur', 'Sunita Sharma', '4', 'ARADHA'],
+                ['BOX014', 'WB901234', 'Ahmedabad', 'Jaipur', 'Sunita Sharma', '4', 'ARADHA'],
+                ['BOX015', 'WB567890', 'Kolkata', 'Lucknow', 'Vikram Mehta', '1', 'ARADHA']
+            ];
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(dummyData);
+            ws['!cols'] = [
+                { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
+                { wch: 20 }, { wch: 12 }, { wch: 15 }
+            ];
+            XLSX.utils.book_append_sheet(wb, ws, 'Template');
+            XLSX.writeFile(wb, 'ARADHA_Box_Tracking_Template.xlsx');
+            showStatus('scanStatus', '✅ Template downloaded successfully!', 'success');
+        }
+
+        // Handle Excel file upload
+        function handleFileUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+                
+                const headers = jsonData[0];
+                const rows = jsonData.slice(1);
+                
+                records = rows.map(row => {
+                    // Parse total boxes: if it contains '/', take second part; else parse as integer
+                    let totalBoxes = row[5] ? row[5].toString().trim() : '1';
+                    let total = 1;
+                    if (totalBoxes.includes('/')) {
+                        total = parseInt(totalBoxes.split('/')[1], 10) || 1;
+                    } else {
+                        total = parseInt(totalBoxes, 10) || 1;
+                    }
+                    return {
+                        barcode: row[0] ? row[0].toString().trim() : '',
+                        waybill: row[1] ? row[1].toString().trim() : '',
+                        senderCity: row[2] ? row[2].toString().trim() : '',
+                        receiverCity: row[3] ? row[3].toString().trim() : '',
+                        receiverName: row[4] ? row[4].toString().trim() : '',
+                        totalBoxes: total, // store as number
+                        companyName: row[6] ? row[6].toString().trim() : 'ARADHA'
+                    };
+                }).filter(r => r.barcode && r.waybill);
+
+                if (records.length > 0) {
+                    displayPreview(records);
+                    document.getElementById('previewSection').style.display = 'block';
+                    showStatus('scanStatus', `✅ Loaded ${records.length} records from file`, 'success');
+                } else {
+                    showStatus('scanStatus', '❌ No valid records found in file', 'error');
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Display preview table
+        function displayPreview(records) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            records.slice(0, 10).forEach(record => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${record.barcode}</td>
+                    <td>${record.waybill}</td>
+                    <td>${record.senderCity}</td>
+                    <td>${record.receiverCity}</td>
+                    <td>${record.receiverName}</td>
+                    <td>${record.totalBoxes}</td>
+                    <td>${record.companyName}</td>
+                `;
+            });
+
+            if (records.length > 10) {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td colspan="7" style="text-align: center; color: #718096;">... and ${records.length - 10} more records</td>`;
+            }
+        }
+
+        // Save records to app
+        function saveRecords() {
+            localStorage.setItem('aradhaRecords', JSON.stringify(records));
+            showStatus('scanStatus', `✅ ${records.length} records saved successfully!`, 'success');
+            // Reset scanned boxes for new session
+            scannedBoxes = {};
+            boxNumberMap = {};
+            recentScans = [];
+            updateDashboard();
+            setTimeout(() => switchTab('scan'), 1500);
+        }
+
+        // Load records from storage
+        function loadRecords() {
+            const saved = localStorage.getItem('aradhaRecords');
+            if (saved) {
+                records = JSON.parse(saved);
+                return true;
+            }
+            return false;
+        }
+
+        // Update global dashboard and pending list
+        function updateDashboard() {
+            if (records.length === 0) {
+                document.getElementById('globalDashboard').style.display = 'none';
+                document.getElementById('pendingBoxesSection').style.display = 'none';
+                document.getElementById('recentScans').style.display = 'none';
+                return;
+            }
+
+            // Compute global totals
+            // Group records by waybill to get unique waybills and their totalBoxes
+            const waybillTotals = {};
+            records.forEach(r => {
+                if (!waybillTotals[r.waybill]) {
+                    waybillTotals[r.waybill] = r.totalBoxes;
+                }
+            });
+
+            let totalBoxesGlobal = 0;
+            for (let wb in waybillTotals) {
+                totalBoxesGlobal += waybillTotals[wb];
+            }
+
+            let scannedGlobal = 0;
+            for (let wb in scannedBoxes) {
+                scannedGlobal += scannedBoxes[wb].length;
+            }
+            let pendingGlobal = totalBoxesGlobal - scannedGlobal;
+
+            document.getElementById('totalBoxesGlobal').textContent = totalBoxesGlobal;
+            document.getElementById('scannedBoxesGlobal').textContent = scannedGlobal;
+            document.getElementById('pendingBoxesGlobal').textContent = pendingGlobal;
+            const progress = totalBoxesGlobal > 0 ? (scannedGlobal / totalBoxesGlobal) * 100 : 0;
+            document.getElementById('progressFillGlobal').style.width = progress + '%';
+
+            document.getElementById('globalDashboard').style.display = 'block';
+            document.getElementById('pendingBoxesSection').style.display = 'block';
+            document.getElementById('recentScans').style.display = 'block';
+
+            // Global pending list: all barcodes not yet scanned
+            const pendingBarcodes = [];
+            records.forEach(r => {
+                const waybill = r.waybill;
+                const scanned = scannedBoxes[waybill] || [];
+                if (!scanned.includes(r.barcode)) {
+                    pendingBarcodes.push({ barcode: r.barcode, waybill: r.waybill });
+                }
+            });
+
+            const pendingListEl = document.getElementById('pendingListGlobal');
+            const pendingCountEl = document.getElementById('pendingCountGlobal');
+            pendingListEl.innerHTML = '';
+
+            if (pendingBarcodes.length === 0) {
+                pendingListEl.innerHTML = '<li style="text-align:center; color:#4caf50; padding:1rem;">✅ All boxes scanned!</li>';
+            } else {
+                pendingBarcodes.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'pending-item';
+                    li.innerHTML = `<span class="barcode">${item.barcode}</span><span>Waybill: ${item.waybill}</span>`;
+                    pendingListEl.appendChild(li);
+                });
+            }
+            pendingCountEl.textContent = `${pendingBarcodes.length} pending`;
+
+            updateRecentScansList();
+        }
+
+        // Update recent scans list (global)
+        function updateRecentScansList() {
+            const scanListEl = document.getElementById('scanList');
+            const scanCountEl = document.getElementById('scanCount');
+            scanListEl.innerHTML = '';
+            if (recentScans.length === 0) {
+                scanListEl.innerHTML = '<li style="text-align:center; color:#a0aec0; padding:1rem;">No scans yet</li>';
+                scanCountEl.textContent = '0 scans';
+                return;
+            }
+
+            const lastScans = [...recentScans].reverse().slice(0, 10);
+            lastScans.forEach(scan => {
+                const li = document.createElement('li');
+                li.className = `scan-item ${scan.duplicate ? 'duplicate' : ''}`;
+                li.innerHTML = `
+                    <span class="barcode">${scan.barcode}</span>
+                    <span class="time">${scan.time}</span>
+                `;
+                scanListEl.appendChild(li);
+            });
+            scanCountEl.textContent = `${recentScans.length} scans`;
+        }
+
+        // Add scan to recent list
+        function addRecentScan(barcode, isDuplicate = false) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            recentScans.push({ barcode, time: timeStr, duplicate: isDuplicate });
+            if (recentScans.length > 50) recentScans.shift();
+            updateRecentScansList();
+        }
+
+        // Print sticker function with barcode generation
+        function printSticker(record, boxNumber, totalBoxes) {
+            if (!record) return;
+
+            // Update text fields
+            document.getElementById('printCompany').textContent = record.companyName || 'ARADHA';
+            document.getElementById('printBoxCount').textContent = `${boxNumber}/${totalBoxes}`;
+            document.getElementById('printWaybill').textContent = record.waybill || 'N/A';
+            document.getElementById('printRoute').textContent = `${record.senderCity || 'N/A'} → ${record.receiverCity || 'N/A'}`;
+            document.getElementById('printReceiver').textContent = record.receiverName || 'N/A';
+            document.getElementById('printBarcodeText').textContent = record.waybill || 'N/A';
+
+            // Generate barcode
+            const canvas = document.getElementById('barcodeCanvas');
+            try {
+                JsBarcode(canvas, record.waybill, {
+                    format: "CODE128",
+                    width: 2,
+                    height: 40,
+                    displayValue: false,
+                    margin: 0
+                });
+            } catch (e) {
+                console.log('Barcode generation failed', e);
+            }
+
+            // Trigger print
+            window.print();
+        }
+
+        // Handle barcode scan
+        function handleBarcodeScan(barcode) {
+            if (!barcode || barcode.trim() === '') return;
+
+            if (records.length === 0 && !loadRecords()) {
+                showStatus('scanStatus', '❌ No records found. Please upload Excel file first.', 'error');
+                return;
+            }
+
+            const record = records.find(r => r.barcode && r.barcode.toString().trim() === barcode.trim());
+            
+            if (!record) {
+                playBeep();
+                showStatus('scanStatus', `❌ No record found for barcode: ${barcode}`, 'error');
+                addRecentScan(barcode, false);
+                document.getElementById('barcodeInput').value = '';
+                setTimeout(() => document.getElementById('barcodeInput').focus(), 100);
+                return;
+            }
+
+            const waybill = record.waybill;
+            const totalBoxes = record.totalBoxes; // number
+
+            // Initialize tracking for this waybill if not exists
+            if (!scannedBoxes[waybill]) {
+                scannedBoxes[waybill] = [];
+            }
+            if (!boxNumberMap[waybill]) {
+                boxNumberMap[waybill] = {};
+            }
+
+            const isDuplicate = scannedBoxes[waybill].includes(barcode);
+            let boxNumber;
+
+            if (isDuplicate) {
+                // Retrieve existing box number
+                boxNumber = boxNumberMap[waybill][barcode];
+                playBeep();
+                const modal = document.getElementById('duplicateModal');
+                document.getElementById('modalBoxInfo').textContent = `${barcode} - Waybill: ${waybill} (Box ${boxNumber}/${totalBoxes})`;
+                modal.style.display = 'flex';
+                window.pendingDuplicateRecord = { record, boxNumber, totalBoxes };
+                addRecentScan(barcode, true);
+            } else {
+                // Assign next box number
+                boxNumber = Object.keys(boxNumberMap[waybill]).length + 1;
+                boxNumberMap[waybill][barcode] = boxNumber;
+                scannedBoxes[waybill].push(barcode);
+                addRecentScan(barcode, false);
+                showStatus('scanStatus', `✅ Found: ${record.waybill} - Printing sticker...`, 'success');
+                printSticker(record, boxNumber, totalBoxes);
+            }
+
+            updateDashboard();
+            document.getElementById('barcodeInput').value = '';
+            setTimeout(() => document.getElementById('barcodeInput').focus(), 100);
+        }
+
+        // Modal actions
+        document.getElementById('modalPrintBtn').addEventListener('click', function() {
+            const data = window.pendingDuplicateRecord;
+            if (data) {
+                printSticker(data.record, data.boxNumber, data.totalBoxes);
+            }
+            document.getElementById('duplicateModal').style.display = 'none';
+            document.getElementById('barcodeInput').focus();
+        });
+
+        document.getElementById('modalCancelBtn').addEventListener('click', function() {
+            document.getElementById('duplicateModal').style.display = 'none';
+            document.getElementById('barcodeInput').focus();
+        });
+
+        document.querySelector('.modal-overlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+                document.getElementById('barcodeInput').focus();
+            }
+        });
+
+        function showStatus(elementId, message, type) {
+            const statusEl = document.getElementById(elementId);
+            statusEl.textContent = message;
+            statusEl.className = `status-message ${type}`;
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+                statusEl.className = 'status-message';
+            }, 3000);
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRecords();
+
+            const barcodeInput = document.getElementById('barcodeInput');
+            
+            barcodeInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleBarcodeScan(this.value);
+                }
+            });
+
+            barcodeInput.addEventListener('input', function() {
+                if (this.value.length > 3) {
+                    if (this.scanTimeout) clearTimeout(this.scanTimeout);
+                    this.scanTimeout = setTimeout(() => {
+                        if (this.value.length > 0) {
+                            handleBarcodeScan(this.value);
+                        }
+                    }, 100);
+                }
+            });
+
+            // Initialize audio on first user interaction
+            document.body.addEventListener('touchstart', initAudio, { once: true });
+            document.body.addEventListener('click', initAudio, { once: true });
+
+            switchTab('upload');
+        });
+
+        document.addEventListener('keypress', function(e) {
+            if (e.target.tagName !== 'INPUT' && e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
